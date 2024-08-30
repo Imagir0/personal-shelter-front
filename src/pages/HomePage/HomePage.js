@@ -27,15 +27,9 @@ const HomePage = () => {
         <h1>{message}</h1>
         <p>Your personal space to manage and protect your files.</p>
       </header>
-
-      <body>
-        <button onClick={handleLoginRedirect}>
-          Login
-        </button>
         <button onClick={handleRegisterRedirect}>
           Register
         </button>
-      </body>
     </div>
   );
 }

@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { UserContext } from '../../context/UserContext';
 
 const Profile = () => {
     const [user, setUser] = useState(null);
+    const { setUsername } = useContext(UserContext);
+    const navigate = useNavigate();
     const userId = localStorage.getItem('userId'); // Assurez-vous que userId est stocké et récupéré correctement
 
     useEffect(() => {
@@ -26,6 +30,26 @@ const Profile = () => {
         fetchUserData();
     }, [userId]);
 
+    const handleUnsubscribe = async () => {
+        try {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/unsubscribe/${userId}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                console.log("Unsubscribe successful");
+                localStorage.removeItem('userId');
+                localStorage.removeItem('username');
+                setUsername(''); // Réinitialiser l'état local du nom d'utilisateur
+                navigate('/'); // Rediriger vers la page d'accueil
+            } else {
+                console.error("Failed to unsubscribe:", response.statusText);
+            }
+        } catch (error) {
+            console.error("Error during unsubscribe:", error);
+        }
+    };
+
     if (!user) {
         return <div>Loading...</div>;
     }
@@ -35,6 +59,9 @@ const Profile = () => {
             <h1>Profile</h1>
             <p>Username: {user.username}</p>
             <p>Email: {user.email}</p>
+            <button onClick={handleUnsubscribe} style={{ background: 'red', color: 'white', border: 'none', padding: '10px', cursor: 'pointer' }}>
+                Unsubscribe
+            </button>
         </div>
     );
 };
