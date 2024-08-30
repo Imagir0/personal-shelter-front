@@ -5,7 +5,7 @@ const Register = () => {
     const [form, setForm] = useState({ username: '', email: '', password: '' });
     const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
+    const handleRegister = async (e) => {
         e.preventDefault();
 
         try {
@@ -16,8 +16,8 @@ const Register = () => {
             });
 
             if (response.ok) {
-                console.log("User registered successfully");
-                navigate('/login'); // Redirection après l'inscription réussie
+                console.log("Registration successful");
+                navigate('/auth'); // Rediriger vers la page de connexion
             } else {
                 const data = await response.json();
                 console.error("Registration failed:", data);
@@ -28,8 +28,7 @@ const Register = () => {
     };
 
     return (
-        <form onSubmit={handleSubmit}>
-            {/* Champs du formulaire */}
+        <form onSubmit={handleRegister}>
             <input
                 type="text"
                 placeholder="Username"

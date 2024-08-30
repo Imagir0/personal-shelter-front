@@ -10,7 +10,7 @@ const Navbar = () => {
         localStorage.removeItem('userId');
         localStorage.removeItem('username');
         setUsername(''); // Réinitialise le nom d'utilisateur dans le contexte
-        navigate('/login'); // Redirige vers la page de connexion
+        navigate('/'); // Redirige vers la page de connexion
     };
 
     const handleProfileClick = () => {
@@ -38,7 +38,7 @@ const Navbar = () => {
                     </button>
                 </div>
             ) : (
-                <Link to="/login" style={{ color: '#fff', textDecoration: 'none' }}>Login</Link>
+                <Link to="/auth" style={{ color: '#fff', textDecoration: 'none' }}>Login</Link>
             )}
         </nav>
     );
