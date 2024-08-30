@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
-const Register = () => {
+const Register = ({ onRegisterSuccess }) => {
     const [form, setForm] = useState({ username: '', email: '', password: '' });
-    const navigate = useNavigate();
+    const [isRegistered, setIsRegistered] = useState(false); // Pour contrôler l'affichage du formulaire
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -17,7 +16,8 @@ const Register = () => {
 
             if (response.ok) {
                 console.log("Registration successful");
-                navigate('/auth'); // Rediriger vers la page de connexion
+                setIsRegistered(true); // Cacher le formulaire et afficher le message de succès
+                onRegisterSuccess(); // Appeler la fonction parent pour afficher le message de succès
             } else {
                 const data = await response.json();
                 console.error("Registration failed:", data);
@@ -26,6 +26,10 @@ const Register = () => {
             console.error("Error:", error);
         }
     };
+
+    if (isRegistered) {
+        return null; // Ne plus afficher le formulaire après l'inscription réussie
+    }
 
     return (
         <form onSubmit={handleRegister}>
