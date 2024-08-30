@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
+
 import './HomePage.css';
 
 const HomePage = () => {
+
   const [message, setMessage] = useState('');
 
   useEffect(() => {
