@@ -2,6 +2,8 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/UserContext';
 import { Container, Typography, TextField, Button, Box, Paper } from '@mui/material';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/material.css';
 
 const Profile = () => {
     const [user, setUser] = useState({
@@ -14,11 +16,15 @@ const Profile = () => {
         last_name: '',
         postal_address: '',
         phone_number: '',
+        dialCode: '',
         profile_picture_url: ''
     });
     const { setUsername } = useContext(UserContext);
     const navigate = useNavigate();
     const userId = localStorage.getItem('userId');
+    
+    const [emailError, setEmailError] = useState(false);
+    const [formError, setFormError] = useState('');
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -27,7 +33,11 @@ const Profile = () => {
                     const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/profile/${userId}`);
                     if (response.ok) {
                         const data = await response.json();
-                        setUser(data);
+                        const defaultDialCode = 'fr'; // Vous pouvez choisir l'indicatif par défaut que vous préférez
+                        setUser({
+                            ...data,
+                            dialCode: data.dialCode || defaultDialCode
+                        });
                     } else {
                         console.error('Failed to fetch user data:', response.statusText);
                     }
@@ -44,25 +54,52 @@ const Profile = () => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setUser({ ...user, [name]: value });
+
+        // Capitaliser la première lettre pour "first_name" et "last_name"
+        const formattedValue = (name === 'first_name' || name === 'last_name') 
+            ? value.charAt(0).toUpperCase() + value.slice(1)
+            : value;
+
+        setUser({ ...user, [name]: formattedValue });
+
+        if (name === 'email') {
+            validateEmail(value);
+        }
+    };
+
+    const handlePhoneChange = (value, data) => {
+        // `data` contient l'indicatif sélectionné
+        setUser({ 
+            ...user, 
+            dialCode: data.dialCode // Met à jour l'indicatif
+        });
+    };
+
+    const validateEmail = (email) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        setEmailError(!emailRegex.test(email));
     };
 
     const handleSave = async () => {
-        try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/profile/${userId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(user),
-            });
+        if (!emailError) {
+            try {
+                const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/profile/${userId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(user),
+                });
 
-            if (response.ok) {
-                console.log("User data updated successfully");
-                setUsername(user.username);
-            } else {
-                console.error("Failed to update user data:", response.statusText);
+                if (response.ok) {
+                    console.log("User data updated successfully");
+                    setUsername(user.username);
+                } else {
+                    console.error("Failed to update user data:", response.statusText);
+                }
+            } catch (error) {
+                console.error("Error updating user data:", error);
             }
-        } catch (error) {
-            console.error("Error updating user data:", error);
+        } else {
+            setFormError('Please correct the errors before saving.');
         }
     };
 
@@ -113,6 +150,8 @@ const Profile = () => {
                         type="email"
                         value={user.email}
                         onChange={handleInputChange}
+                        error={emailError}
+                        helperText={emailError ? "Please enter a valid email address." : ""}
                     />
                     <TextField
                         fullWidth
@@ -132,6 +171,8 @@ const Profile = () => {
                         type="email"
                         value={user.secondary_email}
                         onChange={handleInputChange}
+                        error={emailError}
+                        helperText={emailError ? "Please enter a valid email address." : ""}
                     />
                     <TextField
                         fullWidth
@@ -157,14 +198,34 @@ const Profile = () => {
                         value={user.postal_address}
                         onChange={handleInputChange}
                     />
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        label="Phone Number"
-                        name="phone_number"
-                        value={user.phone_number}
-                        onChange={handleInputChange}
-                    />
+                    <Box display="flex" alignItems="center" style={{ marginTop: '16px' }}>
+                        <Box flex="1" style={{ maxWidth: '25%' }}>
+                            <PhoneInput
+                                country={user.indicatif || 'fr'}
+                                value={user.indicatif}
+                                onChange={handlePhoneChange}
+                                inputProps={{
+                                    name: 'phone_number',
+                                    required: true,
+                                    autoFocus: true,
+                                    readOnly: true,
+                                }}
+                                inputStyle={{ width: '100%' }}
+                            />
+                        </Box>
+                        <Box flex="2" style={{ maxWidth: '75%', marginLeft: '10px' }}>
+                            <TextField
+                                fullWidth
+                                margin="normal"
+                                label="Phone Number"
+                                name="phone_number"
+                                value={user.phone_number}
+                                onChange={handleInputChange}
+                                style={{ marginTop: 0, marginBottom: 0 }} // Assure que le champ de texte ne rajoute pas de marges
+                            />
+                        </Box>
+                    </Box>
+
                     <TextField
                         fullWidth
                         margin="normal"
@@ -183,6 +244,12 @@ const Profile = () => {
                             Save Changes
                         </Button>
                     </Box>
+
+                    {formError && (
+                        <Typography color="error" style={{ marginTop: '10px' }}>
+                            {formError}
+                        </Typography>
+                    )}
                 </form>
 
                 <Box mt={4}>
