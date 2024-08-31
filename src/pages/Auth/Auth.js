@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Login from '../Login/Login';
 import Register from '../Register/Register';
-import { Link } from 'react-router-dom';
+import { Container, Typography, Button, Box, Paper } from '@mui/material';
 
 const Auth = () => {
     const [isRegistering, setIsRegistering] = useState(false);
@@ -21,25 +21,40 @@ const Auth = () => {
     };
 
     return (
-        <div style={{ padding: '20px', maxWidth: '500px', margin: 'auto' }}>
-            <h1>{isRegistering ? 'Register' : 'Login'}</h1>
-
-            {notification ? (
-                <div>
-                    <p style={{ color: 'green' }}>{notification}</p>
-                    <button onClick={handleResetNotification} style={{ color: 'blue', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}>
-                        Retour à la page de connexion
-                    </button>
-                </div>
-            ) : (
-                <>
-                    <button onClick={handleToggle} style={{ marginBottom: '20px' }}>
-                        {isRegistering ? 'Already have an account? Login' : 'Don’t have an account? Register'}
-                    </button>
-                    {isRegistering ? <Register onRegisterSuccess={handleRegisterSuccess} /> : <Login />}
-                </>
-            )}
-        </div>
+        <Container component="main" maxWidth="xs">
+            <Paper elevation={3} style={{ padding: '20px' }}>
+                {notification ? (
+                    <Box textAlign="center">
+                        <Typography variant="body1" color="success.main" gutterBottom>
+                            {notification}
+                        </Typography>
+                        <Button
+                            onClick={handleResetNotification}
+                            variant="text"
+                            color="primary"
+                        >
+                            Retour à la page de connexion
+                        </Button>
+                    </Box>
+                ) : (
+                    <>
+                        <Button
+                            onClick={handleToggle}
+                            variant="outlined"
+                            fullWidth
+                            style={{ marginBottom: '20px' }}
+                        >
+                            {isRegistering ? 'Already have an account? Login' : 'Don’t have an account? Register'}
+                        </Button>
+                        {isRegistering ? (
+                            <Register onRegisterSuccess={handleRegisterSuccess} />
+                        ) : (
+                            <Login />
+                        )}
+                    </>
+                )}
+            </Paper>
+        </Container>
     );
 };
 

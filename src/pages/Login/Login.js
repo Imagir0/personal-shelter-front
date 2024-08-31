@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/UserContext';
+import { Container, Typography, TextField, Button, Box, Paper } from '@mui/material';
 
 const Login = () => {
     const [form, setForm] = useState({ username: '', password: '' });
@@ -36,21 +37,44 @@ const Login = () => {
     };
 
     return (
-        <form onSubmit={handleLogin}>
-            <input
-                type="text"
-                placeholder="Username"
-                value={form.username}
-                onChange={(e) => setForm({ ...form, username: e.target.value })}
-            />
-            <input
-                type="password"
-                placeholder="Password"
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-            />
-            <button type="submit">Login</button>
-        </form>
+        <Container component="main" maxWidth="xs">
+            <Paper elevation={3} style={{ padding: '20px' }}>
+                <Typography variant="h5" component="h1" gutterBottom>
+                    Login
+                </Typography>
+                <form onSubmit={handleLogin} noValidate autoComplete="off">
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        label="Username"
+                        name="username"
+                        value={form.username}
+                        onChange={(e) => setForm({ ...form, username: e.target.value })}
+                        required
+                    />
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        label="Password"
+                        name="password"
+                        type="password"
+                        value={form.password}
+                        onChange={(e) => setForm({ ...form, password: e.target.value })}
+                        required
+                    />
+                    <Box mt={2}>
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            color="primary"
+                            fullWidth
+                        >
+                            Login
+                        </Button>
+                    </Box>
+                </form>
+            </Paper>
+        </Container>
     );
 };
 
