@@ -16,14 +16,17 @@ const Profile = () => {
         last_name: '',
         postal_address: '',
         phone_number: '',
-        dialCode: '',
+        dial_code: '',
         profile_picture_url: ''
     });
     const { setUsername } = useContext(UserContext);
     const navigate = useNavigate();
     const userId = localStorage.getItem('userId');
-    
+
+    const [initialUserData, setInitialUserData] = useState({}); // Pour stocker les données initiales
+    const [isModified, setIsModified] = useState(false); // État pour suivre les modifications
     const [emailError, setEmailError] = useState(false);
+    const [secondaryEmailError, setSecondaryEmailError] = useState(false);
     const [formError, setFormError] = useState('');
 
     useEffect(() => {
@@ -33,11 +36,24 @@ const Profile = () => {
                     const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/profile/${userId}`);
                     if (response.ok) {
                         const data = await response.json();
-                        const defaultDialCode = 'fr'; // Vous pouvez choisir l'indicatif par défaut que vous préférez
-                        setUser({
+    
+                        const cleanedData = {
                             ...data,
-                            dialCode: data.dialCode || defaultDialCode
-                        });
+                            username: data.username || '',
+                            email: data.email || '',
+                            password: data.password || '',
+                            birthday: convertToDateInputFormat(data.birthday) || '',
+                            secondary_email: data.secondary_email || '',
+                            first_name: data.first_name || '',
+                            last_name: data.last_name || '',
+                            postal_address: data.postal_address || '',
+                            phone_number: formatPhoneNumber(data.phone_number || ''), // Formate le numéro de téléphone ici
+                            dial_code: data.dial_code || '+33',
+                            profile_picture_url: data.profile_picture_url || ''
+                        };
+    
+                        setUser(cleanedData);
+                        setInitialUserData(cleanedData); // Stocke les données initiales
                     } else {
                         console.error('Failed to fetch user data:', response.statusText);
                     }
@@ -48,10 +64,10 @@ const Profile = () => {
                 console.error('User ID is undefined.');
             }
         };
-
+    
         fetchUserData();
     }, [userId]);
-
+    
     const handleInputChange = (e) => {
         const { name, value } = e.target;
 
@@ -62,17 +78,15 @@ const Profile = () => {
 
         setUser({ ...user, [name]: formattedValue });
 
+        // Détermine si les données ont été modifiées
+        setIsModified(JSON.stringify({ ...user, [name]: formattedValue }) !== JSON.stringify(initialUserData));
+        
         if (name === 'email') {
             validateEmail(value);
         }
-    };
-
-    const handlePhoneChange = (value, data) => {
-        // `data` contient l'indicatif sélectionné
-        setUser({ 
-            ...user, 
-            dialCode: data.dialCode // Met à jour l'indicatif
-        });
+        if (name === 'secondary_email') {
+            validateSecondaryEmail(value);
+        }
     };
 
     const validateEmail = (email) => {
@@ -80,18 +94,97 @@ const Profile = () => {
         setEmailError(!emailRegex.test(email));
     };
 
+    const validateSecondaryEmail = (email) => {
+        if (email === '') {
+            setSecondaryEmailError(false); // Pas d'erreur si le champ est vide
+        } else {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            setSecondaryEmailError(!emailRegex.test(email));
+        }
+    };
+
+    const convertToDateInputFormat = (isoDate) => {
+        if (!isoDate) return ''; // Retourner une chaîne vide si la date est nulle ou undefined
+        return new Date(isoDate).toISOString().split('T')[0];
+    };
+
+    const handlePhoneChangeAndInput = (value, data) => {
+        // Define formattedDialCode with the "+" sign
+        const formattedDialCode = `+${data.dialCode}`;
+    
+        // Call handlePhoneChange with formattedDialCode
+        handlePhoneChange(formattedDialCode, data);
+    
+        // Call handleInputChange with a synthetic event to simulate a text field change
+        handleInputChange({
+            target: {
+                name: 'dial_code',
+                value: formattedDialCode,
+            }
+        });
+    };
+
+    const handlePhoneChange = (formattedDialCode, data) => {
+        setUser({ 
+            ...user, 
+            dial_code: formattedDialCode // Update dial_code with "+"
+        });
+    };
+
+    const handlePhoneInputChange = (e) => {
+        const { value } = e.target;
+        
+        // Formater le numéro de téléphone avec des espaces
+        const formattedPhoneNumber = formatPhoneNumber(value);
+        
+        // Mettre à jour l'état avec le numéro de téléphone formaté
+        setUser({ ...user, phone_number: formattedPhoneNumber });
+    
+        // Mettre à jour le statut modifié si nécessaire
+        setIsModified(JSON.stringify({ ...user, phone_number: formattedPhoneNumber }) !== JSON.stringify(initialUserData));
+    };
+
+    const formatPhoneNumber = (phoneNumber) => {
+        // Retirer tout ce qui n'est pas un chiffre
+        let cleaned = ('' + phoneNumber).replace(/\D/g, '');
+        
+        // Ajouter des espaces après chaque deux chiffres
+        let formatted = cleaned.match(/.{1,2}/g)?.join(' ') || cleaned;
+        
+        return formatted;
+    };    
+
     const handleSave = async () => {
-        if (!emailError) {
+        // Nettoyer les espaces du numéro de téléphone juste avant l'envoi
+        const cleanedPhoneNumber = user.phone_number.replace(/\s+/g, '');
+    
+        // Validation de la longueur du numéro de téléphone
+        if (cleanedPhoneNumber.length !== 10) {
+            setFormError('Le numéro de téléphone doit contenir 10 chiffres.');
+            return;
+        }
+
+        // Mettre à jour l'objet utilisateur avec le numéro de téléphone nettoyé
+        const updatedUser = {
+            ...user,
+            phone_number: cleanedPhoneNumber,
+        };
+
+        // Vérifier qu'il n'y a pas d'erreurs de formulaire
+        if (!emailError && !secondaryEmailError) {
             try {
                 const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/profile/${userId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(user),
+                    body: JSON.stringify(updatedUser), // Utiliser updatedUser ici
                 });
 
                 if (response.ok) {
                     console.log("User data updated successfully");
                     setUsername(user.username);
+                    setInitialUserData(updatedUser); // Met à jour les données initiales après la sauvegarde
+                    setIsModified(false); // Réinitialise le statut de modification
+                    setFormError(''); // Réinitialise le message d'erreur (cache le message)
                 } else {
                     console.error("Failed to update user data:", response.statusText);
                 }
@@ -171,8 +264,8 @@ const Profile = () => {
                         type="email"
                         value={user.secondary_email}
                         onChange={handleInputChange}
-                        error={emailError}
-                        helperText={emailError ? "Please enter a valid email address." : ""}
+                        error={secondaryEmailError}
+                        helperText={secondaryEmailError ? "Please enter a valid email address." : ""}
                     />
                     <TextField
                         fullWidth
@@ -201,28 +294,29 @@ const Profile = () => {
                     <Box display="flex" alignItems="center" style={{ marginTop: '16px' }}>
                         <Box flex="1" style={{ maxWidth: '25%' }}>
                             <PhoneInput
-                                country={user.indicatif || 'fr'}
-                                value={user.indicatif}
-                                onChange={handlePhoneChange}
+                                country={user.dial_code || 'fr'}
+                                value={user.dial_code}
+                                onChange={handlePhoneChangeAndInput}
                                 inputProps={{
-                                    name: 'phone_number',
-                                    required: true,
-                                    autoFocus: true,
+                                    name: 'dial_code',
                                     readOnly: true,
                                 }}
                                 inputStyle={{ width: '100%' }}
+                                onlyCountries={['fr']} // Liste des pays autorisés, modifiez selon vos besoins ['us', 'fr', 'de', 'it']
                             />
                         </Box>
                         <Box flex="2" style={{ maxWidth: '75%', marginLeft: '10px' }}>
-                            <TextField
-                                fullWidth
-                                margin="normal"
-                                label="Phone Number"
-                                name="phone_number"
-                                value={user.phone_number}
-                                onChange={handleInputChange}
-                                style={{ marginTop: 0, marginBottom: 0 }} // Assure que le champ de texte ne rajoute pas de marges
-                            />
+                        <TextField
+                            fullWidth
+                            margin="normal"
+                            label="Phone Number"
+                            name="phone_number"
+                            value={user.phone_number}
+                            onChange={handlePhoneInputChange}
+                            inputProps={{ maxLength: 14 }}
+                            style={{ marginTop: 0, marginBottom: 0 }}
+                            error={!!formError} // Indique une erreur visuelle si formError est défini
+                        />
                         </Box>
                     </Box>
 
@@ -235,15 +329,17 @@ const Profile = () => {
                         onChange={handleInputChange}
                     />
 
-                    <Box mt={2}>
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={handleSave}
-                        >
-                            Save Changes
-                        </Button>
-                    </Box>
+                    {isModified && ( // Affiche le bouton uniquement si le formulaire a été modifié
+                        <Box mt={2}>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={handleSave}
+                            >
+                                Save Changes
+                            </Button>
+                        </Box>
+                    )}
 
                     {formError && (
                         <Typography color="error" style={{ marginTop: '10px' }}>
