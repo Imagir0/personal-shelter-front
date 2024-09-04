@@ -4,6 +4,8 @@ import { UserContext } from '../../context/UserContext';
 import { Container, Typography, TextField, Button, Box, Paper } from '@mui/material';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/material.css';
+import GoogleMapsLoader from '../../components/GoogleMapsLoader';
+import ConfirmationDialog from '../../components/ConfirmationDialog';
 
 const Profile = () => {
     const [user, setUser] = useState({
@@ -22,12 +24,19 @@ const Profile = () => {
     const { setUsername } = useContext(UserContext);
     const navigate = useNavigate();
     const userId = localStorage.getItem('userId');
+    const [openDialog, setOpenDialog] = useState(false);
 
     const [initialUserData, setInitialUserData] = useState({}); // Pour stocker les données initiales
     const [isModified, setIsModified] = useState(false); // État pour suivre les modifications
     const [emailError, setEmailError] = useState(false);
     const [secondaryEmailError, setSecondaryEmailError] = useState(false);
     const [formError, setFormError] = useState('');
+
+    // Cette fonction vérifie si l'état utilisateur a changé par rapport à l'état initial
+    const checkIfModified = (updatedUser) => {
+        const isModified = JSON.stringify(updatedUser) !== JSON.stringify(initialUserData);
+        setIsModified(isModified);
+    };
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -152,14 +161,14 @@ const Profile = () => {
         let formatted = cleaned.match(/.{1,2}/g)?.join(' ') || cleaned;
         
         return formatted;
-    };    
+    };
 
     const handleSave = async () => {
         // Nettoyer les espaces du numéro de téléphone juste avant l'envoi
         const cleanedPhoneNumber = user.phone_number.replace(/\s+/g, '');
     
         // Validation de la longueur du numéro de téléphone
-        if (cleanedPhoneNumber.length !== 10) {
+        if (cleanedPhoneNumber.length !== 10 && cleanedPhoneNumber.length !== 0) {
             setFormError('Le numéro de téléphone doit contenir 10 chiffres.');
             return;
         }
@@ -214,6 +223,19 @@ const Profile = () => {
         } catch (error) {
             console.error("Error during unsubscribe:", error);
         }
+    };
+
+    const handleOpenDialog = () => {
+        setOpenDialog(true);
+    };
+
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
+    };
+
+    const handleConfirmUnsubscribe = () => {
+        handleUnsubscribe();
+        handleCloseDialog();
     };
 
     if (!user) {
@@ -283,13 +305,12 @@ const Profile = () => {
                         value={user.last_name}
                         onChange={handleInputChange}
                     />
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        label="Postal Address"
-                        name="postal_address"
-                        value={user.postal_address}
-                        onChange={handleInputChange}
+                    <GoogleMapsLoader
+                        user={user}
+                        setUser={(updatedUser) => {
+                            setUser(updatedUser);
+                            checkIfModified(updatedUser);
+                        }}
                     />
                     <Box display="flex" alignItems="center" style={{ marginTop: '16px' }}>
                         <Box flex="1" style={{ maxWidth: '25%' }}>
@@ -352,13 +373,22 @@ const Profile = () => {
                     <Button
                         variant="contained"
                         color="error"
-                        onClick={handleUnsubscribe}
+                        onClick={handleOpenDialog}
                         style={{ marginTop: '20px' }}
                     >
                         Unsubscribe
                     </Button>
                 </Box>
             </Paper>
+            
+            {/* Modal de confirmation */}
+            <ConfirmationDialog
+                open={openDialog}
+                title="Confirm Unsubscribe"
+                message="Are you sure you want to unsubscribe? This action cannot be undone."
+                onConfirm={handleConfirmUnsubscribe}
+                onCancel={handleCloseDialog}
+            />
         </Container>
     );
 };
