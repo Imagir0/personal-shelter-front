@@ -15,6 +15,8 @@ const GoogleMapsLoader = ({ user, setUser }) => {
     return (
         <Autocomplete
             apiKey={process.env.REACT_APP_GOOGLE_API_KEY}
+            label="Address"
+            name="address"
             style={{
                 width: '94%',
                 padding: '16.5px 14px',

@@ -114,7 +114,11 @@ const Profile = () => {
 
     const convertToDateInputFormat = (isoDate) => {
         if (!isoDate) return ''; // Retourner une chaîne vide si la date est nulle ou undefined
-        return new Date(isoDate).toISOString().split('T')[0];
+    
+        const localDate = new Date(isoDate);
+        localDate.setMinutes(localDate.getMinutes() - localDate.getTimezoneOffset()); // Ajuster le fuseau horaire local
+    
+        return localDate.toISOString().split('T')[0];
     };
 
     const handlePhoneChangeAndInput = (value, data) => {
@@ -275,7 +279,7 @@ const Profile = () => {
                         name="birthday"
                         type="date"
                         InputLabelProps={{ shrink: true }}
-                        value={user.birthday}
+                        value={user.birthday || ''}
                         onChange={handleInputChange}
                     />
                     <TextField
@@ -306,6 +310,8 @@ const Profile = () => {
                         onChange={handleInputChange}
                     />
                     <GoogleMapsLoader
+                        label="Address"
+                        name="address"
                         user={user}
                         setUser={(updatedUser) => {
                             setUser(updatedUser);
