@@ -387,7 +387,8 @@ const Profile = () => {
                 title="Confirm Unsubscribe"
                 message="Are you sure you want to unsubscribe? This action cannot be undone."
                 onConfirm={handleConfirmUnsubscribe}
-                onCancel={handleCloseDialog}
+                onClose={handleCloseDialog}
+                context="unsubscribe"
             />
         </Container>
     );
