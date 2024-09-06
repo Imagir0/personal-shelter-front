@@ -30,6 +30,7 @@ const Profile = () => {
     const [isModified, setIsModified] = useState(false); // État pour suivre les modifications
     const [emailError, setEmailError] = useState(false);
     const [secondaryEmailError, setSecondaryEmailError] = useState(false);
+    const [dateError, setDateError] = useState(false);
     const [formError, setFormError] = useState('');
 
     // Cette fonction vérifie si l'état utilisateur a changé par rapport à l'état initial
@@ -84,18 +85,22 @@ const Profile = () => {
         const formattedValue = (name === 'first_name' || name === 'last_name') 
             ? value.charAt(0).toUpperCase() + value.slice(1)
             : value;
-
-        setUser({ ...user, [name]: formattedValue });
-
         // Détermine si les données ont été modifiées
         setIsModified(JSON.stringify({ ...user, [name]: formattedValue }) !== JSON.stringify(initialUserData));
-        
+
+        // Si le champ est "birthday", appeler handleDateChange pour validation
+        if (name === 'birthday') {
+            handleDateChange(e);
+        }
+
         if (name === 'email') {
             validateEmail(value);
         }
         if (name === 'secondary_email') {
             validateSecondaryEmail(value);
         }
+
+        setUser({ ...user, [name]: formattedValue });
     };
 
     const validateEmail = (email) => {
@@ -112,6 +117,7 @@ const Profile = () => {
         }
     };
 
+    //////////////////////////////////////////
     const convertToDateInputFormat = (isoDate) => {
         if (!isoDate) return ''; // Retourner une chaîne vide si la date est nulle ou undefined
     
@@ -119,6 +125,44 @@ const Profile = () => {
         localDate.setMinutes(localDate.getMinutes() - localDate.getTimezoneOffset()); // Ajuster le fuseau horaire local
     
         return localDate.toISOString().split('T')[0];
+    };
+
+    const validateDate = (dateInput) => {
+        // Si la date est vide ou invalide, retourne une erreur
+        if (!dateInput || isNaN(new Date(dateInput))) {
+            return setDateError(true);
+        }
+    
+        const currentDate = new Date();
+        const selectedDate = new Date(dateInput);
+    
+        const currentYear = currentDate.getFullYear();
+        const selectedYear = selectedDate.getFullYear();
+    
+        // Vérifie si l'année est supérieure à l'année actuelle
+        if (selectedYear > currentYear) {
+            return setDateError(true);
+        }
+    
+        // Vérifie si l'année comporte 4 chiffres
+        if (String(selectedYear).length > 4) {
+            return setDateError(true);
+        }
+    
+        // Si tout est valide, ne retourne rien
+        return "";
+    };
+    
+    const handleDateChange = (e) => {
+        const dateValue = e.target.value;
+        const validationMessage = validateDate(dateValue);
+        
+        if (validationMessage) {
+            console.error(validationMessage); // Affiche le message d'erreur dans la console
+            // Optionnel : tu peux afficher ce message dans l'interface utilisateur
+        } else {
+            setUser({ ...user, birthday: dateValue }); // Met à jour l'état utilisateur si la date est valide
+        }
     };
 
     const handlePhoneChangeAndInput = (value, data) => {
@@ -184,7 +228,7 @@ const Profile = () => {
         };
 
         // Vérifier qu'il n'y a pas d'erreurs de formulaire
-        if (!emailError && !secondaryEmailError) {
+        if (!emailError && !secondaryEmailError && !dateError) {
             try {
                 const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/profile/${userId}`, {
                     method: 'PUT',
@@ -281,6 +325,8 @@ const Profile = () => {
                         InputLabelProps={{ shrink: true }}
                         value={user.birthday || ''}
                         onChange={handleInputChange}
+                        error={dateError}
+                        helperText={dateError ? "Please enter a valid date." : ""}
                     />
                     <TextField
                         fullWidth
