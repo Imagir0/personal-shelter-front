@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/UserContext';
 import { Container, Typography, TextField, Button, Box, Paper } from '@mui/material';
+import Grid2 from '@mui/material/Grid2';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/material.css';
 import GoogleMapsLoader from '../../components/GoogleMapsLoader';
@@ -31,6 +32,8 @@ const Profile = () => {
     const [emailError, setEmailError] = useState(false);
     const [secondaryEmailError, setSecondaryEmailError] = useState(false);
     const [dateError, setDateError] = useState(false);
+    const today = new Date();
+    const birthDateLimitMin = today.getFullYear()-70;
     const [formError, setFormError] = useState('');
 
     // Cette fonction vérifie si l'état utilisateur a changé par rapport à l'état initial
@@ -140,16 +143,14 @@ const Profile = () => {
         const selectedYear = selectedDate.getFullYear();
     
         // Vérifie si l'année est supérieure à l'année actuelle
-        if (selectedYear > currentYear) {
+        if (selectedYear > currentYear || selectedYear < birthDateLimitMin) {
             return setDateError(true);
         }
-    
-        // Vérifie si l'année comporte 4 chiffres
-        if (String(selectedYear).length > 4) {
-            return setDateError(true);
+
+        if (dateInput) {
+            return setDateError(false);
         }
-    
-        // Si tout est valide, ne retourne rien
+
         return "";
     };
     
@@ -163,6 +164,22 @@ const Profile = () => {
         } else {
             setUser({ ...user, birthday: dateValue }); // Met à jour l'état utilisateur si la date est valide
         }
+    };
+
+    const calculateAge = (birthday) => {
+        if (!birthday) return '';
+    
+        const birthDate = new Date(birthday);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDifference = today.getMonth() - birthDate.getMonth();
+    
+        // Si la date d'anniversaire n'est pas encore passée cette année
+        if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+    
+        return age;
     };
 
     const handlePhoneChangeAndInput = (value, data) => {
@@ -291,157 +308,182 @@ const Profile = () => {
     }
 
     return (
-        <Container component="main" maxWidth="sm">
-            <Paper elevation={3} style={{ padding: '20px' }}>
-                <Typography variant="h4" gutterBottom>
-                    Profile
-                </Typography>
-                <form noValidate autoComplete="off">
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        label="Username"
-                        name="username"
-                        value={user.username}
-                        onChange={handleInputChange}
-                    />
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        label="Email"
-                        name="email"
-                        type="email"
-                        value={user.email}
-                        onChange={handleInputChange}
-                        error={emailError}
-                        helperText={emailError ? "Please enter a valid email address." : ""}
-                    />
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        label="Birthday"
-                        name="birthday"
-                        type="date"
-                        InputLabelProps={{ shrink: true }}
-                        value={user.birthday || ''}
-                        onChange={handleInputChange}
-                        error={dateError}
-                        helperText={dateError ? "Please enter a valid date." : ""}
-                    />
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        label="Secondary Email"
-                        name="secondary_email"
-                        type="email"
-                        value={user.secondary_email}
-                        onChange={handleInputChange}
-                        error={secondaryEmailError}
-                        helperText={secondaryEmailError ? "Please enter a valid email address." : ""}
-                    />
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        label="First Name"
-                        name="first_name"
-                        value={user.first_name}
-                        onChange={handleInputChange}
-                    />
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        label="Last Name"
-                        name="last_name"
-                        value={user.last_name}
-                        onChange={handleInputChange}
-                    />
-                    <GoogleMapsLoader
-                        label="Address"
-                        name="address"
-                        user={user}
-                        setUser={(updatedUser) => {
-                            setUser(updatedUser);
-                            checkIfModified(updatedUser);
-                        }}
-                    />
-                    <Box display="flex" alignItems="center" style={{ marginTop: '16px' }}>
-                        <Box flex="1" style={{ maxWidth: '25%' }}>
-                            <PhoneInput
-                                country={user.dial_code || 'fr'}
-                                value={user.dial_code}
-                                onChange={handlePhoneChangeAndInput}
-                                inputProps={{
-                                    name: 'dial_code',
-                                    readOnly: true,
-                                }}
-                                inputStyle={{ width: '100%' }}
-                                onlyCountries={['fr']} // Liste des pays autorisés, modifiez selon vos besoins ['us', 'fr', 'de', 'it']
-                            />
-                        </Box>
-                        <Box flex="2" style={{ maxWidth: '75%', marginLeft: '10px' }}>
+        <Container component="main" maxWidth="100%" style={{ padding: '20px'}}>
+            <Paper elevation={0} style={{ padding: '40px'}}>
+                <Grid2 container spacing={3} justifyContent="space-between">
+                    <Grid2 item xs={1}></Grid2>
+                    <Grid2 item xs={4} style={{ width:"20%", textAlign: "center"}}>
                         <TextField
                             fullWidth
-                            margin="normal"
-                            label="Phone Number"
-                            name="phone_number"
-                            value={user.phone_number}
-                            onChange={handlePhoneInputChange}
-                            inputProps={{ maxLength: 14 }}
-                            style={{ marginTop: 0, marginBottom: 0 }}
-                            error={!!formError} // Indique une erreur visuelle si formError est défini
+                            label="Profile Picture URL"
+                            name="profile_picture_url"
+                            value={user.profile_picture_url}
+                            onChange={handleInputChange}
+                            style={{ marginBottom: '20px' }}
                         />
-                        </Box>
-                    </Box>
-
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        label="Profile Picture URL"
-                        name="profile_picture_url"
-                        value={user.profile_picture_url}
-                        onChange={handleInputChange}
-                    />
-
-                    {isModified && ( // Affiche le bouton uniquement si le formulaire a été modifié
-                        <Box mt={2}>
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                onClick={handleSave}
-                            >
-                                Save Changes
-                            </Button>
-                        </Box>
-                    )}
-
-                    {formError && (
-                        <Typography color="error" style={{ marginTop: '10px' }}>
-                            {formError}
+                        <Typography variant="h5" gutterBottom>
+                            {user.first_name} {user.last_name}
                         </Typography>
-                    )}
-                </form>
+                        <Typography variant="h8" gutterBottom>
+                            @{user.username}
+                        </Typography>
+                    </Grid2>
+                    <Grid2 item xs={10} style={{ width: "60%" }}>
+                        <Typography variant="h4" gutterBottom>
+                            Profile
+                        </Typography>
+                        <form noValidate autoComplete="off">
+                            <TextField
+                                fullWidth
+                                margin="normal"
+                                label="Username"
+                                name="username"
+                                value={user.username}
+                                onChange={handleInputChange}
+                            />
+                            <Box display="flex" justifyContent="space-between">
+                                <TextField
+                                    fullWidth
+                                    margin="normal"
+                                    label="First Name"
+                                    name="first_name"
+                                    value={user.first_name}
+                                    onChange={handleInputChange}
+                                    style={{ marginRight: '10px', flex: 1 }}
+                                />
+                                <TextField
+                                    fullWidth
+                                    margin="normal"
+                                    label="Last Name"
+                                    name="last_name"
+                                    value={user.last_name}
+                                    onChange={handleInputChange}
+                                    style={{ flex: 1 }}
+                                />
+                            </Box>
+                            <Box display="flex" alignItems="center" justifyContent="space-between">
+                                <TextField
+                                    fullWidth
+                                    margin="normal"
+                                    label="Birthday"
+                                    name="birthday"
+                                    type="date"
+                                    InputLabelProps={{ shrink: true }}
+                                    inputProps={{ max: '2030-12-31', min: birthDateLimitMin + '-01-01' }}
+                                    value={user.birthday || ''}
+                                    onChange={handleInputChange}
+                                    error={dateError}
+                                    helperText={dateError ? "Please enter a valid date." : ""}
+                                />
+                                {user.birthday && (
+                                    <Typography
+                                        variant="body1"
+                                        style={{ marginTop: '8px', textAlign: "center" }}>
+                                        Age: {calculateAge(user.birthday)}
+                                    </Typography>
+                                )}
+                            </Box>
+                            <TextField
+                                fullWidth
+                                margin="normal"
+                                label="Email"
+                                name="email"
+                                type="email"
+                                value={user.email}
+                                onChange={handleInputChange}
+                                error={emailError}
+                                helperText={emailError ? "Please enter a valid email address." : ""}
+                            />
+                            <TextField
+                                fullWidth
+                                margin="normal"
+                                label="Secondary Email"
+                                name="secondary_email"
+                                type="email"
+                                value={user.secondary_email}
+                                onChange={handleInputChange}
+                                error={secondaryEmailError}
+                                helperText={secondaryEmailError ? "Please enter a valid email address." : ""}
+                            />
+                            <GoogleMapsLoader
+                                label="Address"
+                                name="address"
+                                user={user}
+                                setUser={(updatedUser) => {
+                                    setUser(updatedUser);
+                                    checkIfModified(updatedUser);
+                                }}
+                            />
+                            <Box display="flex" alignItems="center" style={{ marginTop: '16px' }}>
+                                <Box flex="1" style={{ maxWidth: '25%' }}>
+                                    <PhoneInput
+                                        country={user.dial_code || 'fr'}
+                                        value={user.dial_code}
+                                        onChange={handlePhoneChangeAndInput}
+                                        inputProps={{
+                                            name: 'dial_code',
+                                            readOnly: true,
+                                        }}
+                                        inputStyle={{ width: '100%' }}
+                                        onlyCountries={['fr']}
+                                    />
+                                </Box>
+                                <Box flex="2" style={{ maxWidth: '75%', marginLeft: '10px' }}>
+                                    <TextField
+                                        fullWidth
+                                        margin="normal"
+                                        label="Phone Number"
+                                        name="phone_number"
+                                        value={user.phone_number}
+                                        onChange={handlePhoneInputChange}
+                                        inputProps={{ maxLength: 14 }}
+                                        style={{ marginTop: 0, marginBottom: 0 }}
+                                        error={!!formError}
+                                    />
+                                </Box>
+                            </Box>
 
-                <Box mt={4}>
-                    <Button
-                        variant="contained"
-                        color="error"
-                        onClick={handleOpenDialog}
-                        style={{ marginTop: '20px' }}
-                    >
-                        Unsubscribe
-                    </Button>
-                </Box>
+                            {isModified && (
+                                <Box mt={2}>
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        onClick={handleSave}
+                                    >
+                                        Save Changes
+                                    </Button>
+                                </Box>
+                            )}
+                            
+                            <Box mt={4}>
+                                <Button
+                                    variant="contained"
+                                    color="error"
+                                    onClick={handleOpenDialog}
+                                    style={{ marginTop: '20px' }}
+                                >
+                                    Unsubscribe
+                                </Button>
+                            </Box>
+
+                            {formError && (
+                                <Typography color="error" style={{ marginTop: '10px' }}>
+                                    {formError}
+                                </Typography>
+                            )}
+                        </form>
+                    </Grid2>
+                    <Grid2 id="test" item xs={1}></Grid2>
+                </Grid2>
+                <ConfirmationDialog
+                    open={openDialog}
+                    title="Confirm Unsubscribe"
+                    message="Are you sure you want to unsubscribe? This action cannot be undone."
+                    onConfirm={handleConfirmUnsubscribe}
+                    onClose={handleCloseDialog}
+                    context="unsubscribe"
+                />
             </Paper>
-            
-            {/* Modal de confirmation */}
-            <ConfirmationDialog
-                open={openDialog}
-                title="Confirm Unsubscribe"
-                message="Are you sure you want to unsubscribe? This action cannot be undone."
-                onConfirm={handleConfirmUnsubscribe}
-                onClose={handleCloseDialog}
-                context="unsubscribe"
-            />
         </Container>
     );
 };
