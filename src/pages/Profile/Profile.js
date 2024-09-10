@@ -120,7 +120,6 @@ const Profile = () => {
         }
     };
 
-    //////////////////////////////////////////
     const convertToDateInputFormat = (isoDate) => {
         if (!isoDate) return ''; // Retourner une chaîne vide si la date est nulle ou undefined
     
@@ -131,8 +130,8 @@ const Profile = () => {
     };
 
     const validateDate = (dateInput) => {
-        // Si la date est vide ou invalide, retourne une erreur
-        if (!dateInput || isNaN(new Date(dateInput))) {
+        // Si la date est invalide, retourne une erreur
+        if (isNaN(new Date(dateInput))) {
             return setDateError(true);
         }
     
@@ -158,10 +157,7 @@ const Profile = () => {
         const dateValue = e.target.value;
         const validationMessage = validateDate(dateValue);
         
-        if (validationMessage) {
-            console.error(validationMessage); // Affiche le message d'erreur dans la console
-            // Optionnel : tu peux afficher ce message dans l'interface utilisateur
-        } else {
+        if (!validationMessage) {
             setUser({ ...user, birthday: dateValue }); // Met à jour l'état utilisateur si la date est valide
         }
     };
@@ -369,7 +365,7 @@ const Profile = () => {
                                     name="birthday"
                                     type="date"
                                     InputLabelProps={{ shrink: true }}
-                                    inputProps={{ max: '2030-12-31', min: birthDateLimitMin + '-01-01' }}
+                                    inputProps={{ max: '2030-12-31', min: birthDateLimitMin + '-00-00' }}
                                     value={user.birthday || ''}
                                     onChange={handleInputChange}
                                     error={dateError}
@@ -378,7 +374,7 @@ const Profile = () => {
                                 {user.birthday && (
                                     <Typography
                                         variant="body1"
-                                        style={{ marginTop: '8px', textAlign: "center" }}>
+                                        style={{ marginTop: '8px', textAlign: "center", width:"20%" }}>
                                         Age: {calculateAge(user.birthday)}
                                     </Typography>
                                 )}
