@@ -35,7 +35,7 @@ const Profile = () => {
     const [secondaryEmailError, setSecondaryEmailError] = useState(false);
     const [dateError, setDateError] = useState(false);
     const today = new Date();
-    const birthDateLimitMin = today.getFullYear()-70;
+    const birthDateLimitMin = today.getFullYear() - 70;
     const [formError, setFormError] = useState('');
 
     // Cette fonction vérifie si l'état utilisateur a changé par rapport à l'état initial
@@ -51,7 +51,7 @@ const Profile = () => {
                     const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/profile/${userId}`);
                     if (response.ok) {
                         const data = await response.json();
-    
+
                         const cleanedData = {
                             ...data,
                             username: data.username || '',
@@ -66,7 +66,7 @@ const Profile = () => {
                             dial_code: data.dial_code || '+33',
                             profile_picture_url: data.profile_picture_url || ''
                         };
-    
+
                         setUser(cleanedData);
                         setInitialUserData(cleanedData); // Stocke les données initiales
                     } else {
@@ -79,15 +79,15 @@ const Profile = () => {
                 console.error('User ID is undefined.');
             }
         };
-    
+
         fetchUserData();
     }, [userId]);
-    
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
 
         // Capitaliser la première lettre pour "first_name" et "last_name"
-        const formattedValue = (name === 'first_name' || name === 'last_name') 
+        const formattedValue = (name === 'first_name' || name === 'last_name')
             ? value.charAt(0).toUpperCase() + value.slice(1)
             : value;
         // Détermine si les données ont été modifiées
@@ -112,13 +112,13 @@ const Profile = () => {
     function stringAvatar(name) {
         const initials = name.split(' ').map(word => word[0]).join('');
         return {
-        sx: {
-            bgcolor: stringToColor(name), // Génère une couleur en fonction du nom
-        },
-        children: initials,
+            sx: {
+                bgcolor: stringToColor(name), // Génère une couleur en fonction du nom
+            },
+            children: initials,
         };
     }
-    
+
     // Fonction qui génère une couleur à partir du nom
     function stringToColor(string) {
         let hash = 0;
@@ -149,10 +149,10 @@ const Profile = () => {
 
     const convertToDateInputFormat = (isoDate) => {
         if (!isoDate) return ''; // Retourner une chaîne vide si la date est nulle ou undefined
-    
+
         const localDate = new Date(isoDate);
         localDate.setMinutes(localDate.getMinutes() - localDate.getTimezoneOffset()); // Ajuster le fuseau horaire local
-    
+
         return localDate.toISOString().split('T')[0];
     };
 
@@ -161,13 +161,13 @@ const Profile = () => {
         if (isNaN(new Date(dateInput))) {
             return setDateError(true);
         }
-    
+
         const currentDate = new Date();
         const selectedDate = new Date(dateInput);
-    
+
         const currentYear = currentDate.getFullYear();
         const selectedYear = selectedDate.getFullYear();
-    
+
         // Vérifie si l'année est supérieure à l'année actuelle
         if (selectedYear > currentYear || selectedYear < birthDateLimitMin) {
             return setDateError(true);
@@ -179,11 +179,11 @@ const Profile = () => {
 
         return "";
     };
-    
+
     const handleDateChange = (e) => {
         const dateValue = e.target.value;
         const validationMessage = validateDate(dateValue);
-        
+
         if (!validationMessage) {
             setUser({ ...user, birthday: dateValue }); // Met à jour l'état utilisateur si la date est valide
         }
@@ -191,27 +191,27 @@ const Profile = () => {
 
     const calculateAge = (birthday) => {
         if (!birthday) return '';
-    
+
         const birthDate = new Date(birthday);
         const today = new Date();
         let age = today.getFullYear() - birthDate.getFullYear();
         const monthDifference = today.getMonth() - birthDate.getMonth();
-    
+
         // Si la date d'anniversaire n'est pas encore passée cette année
         if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
             age--;
         }
-    
+
         return age;
     };
 
     const handlePhoneChangeAndInput = (value, data) => {
         // Define formattedDialCode with the "+" sign
         const formattedDialCode = `+${data.dialCode}`;
-    
+
         // Call handlePhoneChange with formattedDialCode
         handlePhoneChange(formattedDialCode, data);
-    
+
         // Call handleInputChange with a synthetic event to simulate a text field change
         handleInputChange({
             target: {
@@ -222,21 +222,21 @@ const Profile = () => {
     };
 
     const handlePhoneChange = (formattedDialCode, data) => {
-        setUser({ 
-            ...user, 
+        setUser({
+            ...user,
             dial_code: formattedDialCode // Update dial_code with "+"
         });
     };
 
     const handlePhoneInputChange = (e) => {
         const { value } = e.target;
-        
+
         // Formater le numéro de téléphone avec des espaces
         const formattedPhoneNumber = formatPhoneNumber(value);
-        
+
         // Mettre à jour l'état avec le numéro de téléphone formaté
         setUser({ ...user, phone_number: formattedPhoneNumber });
-    
+
         // Mettre à jour le statut modifié si nécessaire
         setIsModified(JSON.stringify({ ...user, phone_number: formattedPhoneNumber }) !== JSON.stringify(initialUserData));
     };
@@ -244,17 +244,17 @@ const Profile = () => {
     const formatPhoneNumber = (phoneNumber) => {
         // Retirer tout ce qui n'est pas un chiffre
         let cleaned = ('' + phoneNumber).replace(/\D/g, '');
-        
+
         // Ajouter des espaces après chaque deux chiffres
         let formatted = cleaned.match(/.{1,2}/g)?.join(' ') || cleaned;
-        
+
         return formatted;
     };
 
     const handleSave = async () => {
         // Nettoyer les espaces du numéro de téléphone juste avant l'envoi
         const cleanedPhoneNumber = user.phone_number.replace(/\s+/g, '');
-    
+
         // Validation de la longueur du numéro de téléphone
         if (cleanedPhoneNumber.length !== 10 && cleanedPhoneNumber.length !== 0) {
             setFormError('Le numéro de téléphone doit contenir 10 chiffres.');
@@ -303,8 +303,8 @@ const Profile = () => {
                 console.log("Unsubscribe successful");
                 localStorage.removeItem('userId');
                 localStorage.removeItem('username');
-                setUsername(''); 
-                navigate('/'); 
+                setUsername('');
+                navigate('/');
             } else {
                 console.error("Failed to unsubscribe:", response.statusText);
             }
@@ -337,8 +337,8 @@ const Profile = () => {
     }
 
     return (
-        <Container component="main" maxWidth="100%" style={{ padding: '20px'}}>
-            <Paper elevation={0} style={{ padding: '40px'}}>
+        <Container component="main" maxWidth="100%" style={{ padding: '20px' }}>
+            <Paper elevation={0} style={{ padding: '40px' }}>
                 <Grid2 container spacing={3} justifyContent="space-between">
                     <Grid2 xs={1}></Grid2>
                     <Grid2
@@ -356,9 +356,9 @@ const Profile = () => {
                             overlap="circular"
                             anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                             badgeContent={
-                                <span id="modifyAvatar"onClick={() => handleOpenDialog('upload-profile-picture')}>+</span>
+                                <span id="modifyAvatar" onClick={() => handleOpenDialog('upload-profile-picture')}>+</span>
                             }
-                            >
+                        >
                             <Avatar id="avatarSize" {...stringAvatar(`${user.first_name} ${user.last_name}`)} />
                         </Badge>
                         <Typography id="firstAndLastName" variant="h5" gutterBottom>
@@ -419,7 +419,7 @@ const Profile = () => {
                                 {user.birthday && (
                                     <Typography
                                         variant="body1"
-                                        style={{ marginTop: '8px', textAlign: "center", width:"20%" }}>
+                                        style={{ marginTop: '8px', textAlign: "center", width: "20%" }}>
                                         Age: {calculateAge(user.birthday)}
                                     </Typography>
                                 )}
@@ -495,7 +495,7 @@ const Profile = () => {
                                     </Button>
                                 </Box>
                             )}
-                            
+
                             <Box mt={4}>
                                 <Button
                                     variant="contained"
@@ -524,7 +524,6 @@ const Profile = () => {
                     onClose={handleCloseDialog}
                     context="unsubscribe"
                 />
-
                 <ConfirmationDialog
                     open={openDialog && dialogContext === 'upload-profile-picture'}
                     title="Upload a profile picture"
