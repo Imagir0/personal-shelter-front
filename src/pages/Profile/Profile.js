@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/UserContext';
-import { Container, Typography, TextField, Button, Box, Paper } from '@mui/material';
+import { Container, Typography, TextField, Button, Box, Paper, Avatar, Badge } from '@mui/material';
 import Grid2 from '@mui/material/Grid2';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/material.css';
 import GoogleMapsLoader from '../../components/GoogleMapsLoader';
 import ConfirmationDialog from '../../components/ConfirmationDialog';
+import './Profile.css';
 
 const Profile = () => {
     const [user, setUser] = useState({
@@ -26,6 +27,7 @@ const Profile = () => {
     const navigate = useNavigate();
     const userId = localStorage.getItem('userId');
     const [openDialog, setOpenDialog] = useState(false);
+    const [dialogContext, setDialogContext] = useState('');
 
     const [initialUserData, setInitialUserData] = useState({}); // Pour stocker les données initiales
     const [isModified, setIsModified] = useState(false); // État pour suivre les modifications
@@ -105,6 +107,31 @@ const Profile = () => {
 
         setUser({ ...user, [name]: formattedValue });
     };
+
+    // Fonction qui génère les initiales et les styles pour l'avatar
+    function stringAvatar(name) {
+        const initials = name.split(' ').map(word => word[0]).join('');
+        return {
+        sx: {
+            bgcolor: stringToColor(name), // Génère une couleur en fonction du nom
+        },
+        children: initials,
+        };
+    }
+    
+    // Fonction qui génère une couleur à partir du nom
+    function stringToColor(string) {
+        let hash = 0;
+        for (let i = 0; i < string.length; i++) {
+            hash = string.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        let color = '#';
+        for (let i = 0; i < 3; i++) {
+            const value = (hash >> (i * 8)) & 0xff;
+            color += ('00' + value.toString(16)).substr(-2);
+        }
+        return color;
+    }
 
     const validateEmail = (email) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -286,17 +313,23 @@ const Profile = () => {
         }
     };
 
-    const handleOpenDialog = () => {
+    const handleOpenDialog = (context) => {
+        setDialogContext(context);
         setOpenDialog(true);
     };
 
-    const handleCloseDialog = () => {
-        setOpenDialog(false);
+    const handleConfirmUpload = () => {
+        //handleUpload();
+        handleCloseDialog();
     };
 
     const handleConfirmUnsubscribe = () => {
         handleUnsubscribe();
         handleCloseDialog();
+    };
+
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
     };
 
     if (!user) {
@@ -307,24 +340,36 @@ const Profile = () => {
         <Container component="main" maxWidth="100%" style={{ padding: '20px'}}>
             <Paper elevation={0} style={{ padding: '40px'}}>
                 <Grid2 container spacing={3} justifyContent="space-between">
-                    <Grid2 item xs={1}></Grid2>
-                    <Grid2 item xs={4} style={{ width:"20%", textAlign: "center"}}>
-                        <TextField
-                            fullWidth
-                            label="Profile Picture URL"
-                            name="profile_picture_url"
-                            value={user.profile_picture_url}
-                            onChange={handleInputChange}
-                            style={{ marginBottom: '20px' }}
-                        />
-                        <Typography variant="h5" gutterBottom>
+                    <Grid2 xs={1}></Grid2>
+                    <Grid2
+                        xs={4}
+                        style={{
+                            width: "20%",
+                            textAlign: "center",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center"
+                        }}
+                    >
+                        <Badge
+                            overlap="circular"
+                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                            badgeContent={
+                                <span id="modifyAvatar"onClick={() => handleOpenDialog('upload-profile-picture')}>+</span>
+                            }
+                            >
+                            <Avatar id="avatarSize" {...stringAvatar(`${user.first_name} ${user.last_name}`)} />
+                        </Badge>
+                        <Typography id="firstAndLastName" variant="h5" gutterBottom>
                             {user.first_name} {user.last_name}
                         </Typography>
-                        <Typography variant="h8" gutterBottom>
+                        <Typography variant="h8" gutterBottom style={{ color: "grey" }}>
                             @{user.username}
                         </Typography>
                     </Grid2>
-                    <Grid2 item xs={10} style={{ width: "60%" }}>
+
+                    <Grid2 xs={10} style={{ width: "60%" }}>
                         <Typography variant="h4" gutterBottom>
                             Profile
                         </Typography>
@@ -455,7 +500,7 @@ const Profile = () => {
                                 <Button
                                     variant="contained"
                                     color="error"
-                                    onClick={handleOpenDialog}
+                                    onClick={() => handleOpenDialog('unsubscribe')}
                                     style={{ marginTop: '20px' }}
                                 >
                                     Unsubscribe
@@ -469,15 +514,24 @@ const Profile = () => {
                             )}
                         </form>
                     </Grid2>
-                    <Grid2 id="test" item xs={1}></Grid2>
+                    <Grid2 xs={1}></Grid2>
                 </Grid2>
                 <ConfirmationDialog
-                    open={openDialog}
+                    open={openDialog && dialogContext === 'unsubscribe'}
                     title="Confirm Unsubscribe"
                     message="Are you sure you want to unsubscribe? This action cannot be undone."
                     onConfirm={handleConfirmUnsubscribe}
                     onClose={handleCloseDialog}
                     context="unsubscribe"
+                />
+
+                <ConfirmationDialog
+                    open={openDialog && dialogContext === 'upload-profile-picture'}
+                    title="Upload a profile picture"
+                    message="Select a profile picture"
+                    onConfirm={handleConfirmUpload}
+                    onClose={handleCloseDialog}
+                    context="upload-profile-picture"
                 />
             </Paper>
         </Container>

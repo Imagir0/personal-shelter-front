@@ -2,6 +2,7 @@ import React from 'react';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
+import UploadIcon from '@mui/icons-material/Upload';
 
 const ConfirmationDialog = ({ open, onClose, onConfirm, title, message, context }) => {
 
@@ -29,6 +30,17 @@ const ConfirmationDialog = ({ open, onClose, onConfirm, title, message, context 
                         Confirm
                     </Button>
                 );
+            case 'upload-profile-picture':
+                return (
+                    <Button 
+                        onClick={onConfirm} 
+                        color="primary" 
+                        variant="contained" 
+                        startIcon={<UploadIcon />}  // Icône pour "upload"
+                    >
+                        Upload
+                    </Button>
+                );
             default:
                 return (
                     <Button 
@@ -49,7 +61,7 @@ const ConfirmationDialog = ({ open, onClose, onConfirm, title, message, context 
                 <DialogContentText>{message}</DialogContentText>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose} color="primary" autoFocus>
+                <Button onClick={onClose} color="primary">
                     Cancel
                 </Button>
                 {renderButton()}
