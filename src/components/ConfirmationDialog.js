@@ -1,21 +1,35 @@
-import React, { useState } from 'react';
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, Typography } from '@mui/material';
+import React, { useRef } from 'react';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
 import UploadIcon from '@mui/icons-material/Upload';
+import ProfilePictureUpload from './ProfilePictureUpload';
 
 const ConfirmationDialog = ({ open, onClose, onConfirm, title, message, context }) => {
 
-    const [selectedFile, setSelectedFile] = useState(null);
+    const uploadRef = useRef(); // Crée une référence pour le composant ProfilePictureUpload
 
-    // Handle file selection
-    const handleFileChange = (event) => {
-        const file = event.target.files[0];
-        if (file && file.type.startsWith('image/')) {
-            const fileURL = URL.createObjectURL(file);
-            setSelectedFile(fileURL); // Store the file URL for preview
-        } else {
-            setSelectedFile(null); // Reset if not an image
+    const handleUploadClick = async () => {
+        if (uploadRef.current) {
+            await uploadRef.current.uploadImage(); // Appelle la méthode d'upload de ProfilePictureUpload
+            onConfirm(); // Fermer la modal ou autre action après l'upload
+        }
+    };
+
+    const renderContent = () => {
+        switch(context) {
+            case 'unsubscribe':
+                return (
+                    <DialogContentText>{message}</DialogContentText>
+                );
+            case 'upload-profile-picture':
+                return (
+                     <ProfilePictureUpload ref={uploadRef} />
+                );
+            default:
+                return (
+                    <DialogContentText>{message}</DialogContentText>
+                );
         }
     };
 
@@ -46,7 +60,7 @@ const ConfirmationDialog = ({ open, onClose, onConfirm, title, message, context 
             case 'upload-profile-picture':
                 return (
                     <Button 
-                        onClick={onConfirm} 
+                        onClick={handleUploadClick} 
                         color="primary" 
                         variant="contained" 
                         startIcon={<UploadIcon />}  // Icône pour "upload"
@@ -66,34 +80,16 @@ const ConfirmationDialog = ({ open, onClose, onConfirm, title, message, context 
                 );
         }
     };
-
+    
     const handleClose = () => {
-        setSelectedFile(null); // Clear the selected file when closing the dialog
-        onClose(); // Call the original onClose function
+        onClose();
     };
 
     return (
         <Dialog open={open} onClose={handleClose} disableEscapeKeyDown={false}>
             <DialogTitle>{title}</DialogTitle>
             <DialogContent>
-                <DialogContentText>{message}</DialogContentText>
-
-                {context === 'upload-profile-picture' && (
-                    <>
-                        <input
-                            type="file"
-                            accept="image/jpeg"
-                            onChange={handleFileChange}
-                        />
-                        {selectedFile && (
-                            <div style={{ marginTop: '20px' }}>
-                                <Typography variant="subtitle1">Image Preview:</Typography>
-                                <img src={selectedFile} alt="Preview" style={{ maxWidth: '100%', maxHeight: '300px' }} />
-                            </div>
-                        )}
-                    </>
-                )}
-
+                {renderContent()}
             </DialogContent>
             <DialogActions>
                 <Button onClick={handleClose} color="primary">

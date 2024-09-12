@@ -319,7 +319,6 @@ const Profile = () => {
     };
 
     const handleConfirmUpload = () => {
-        //handleUpload();
         handleCloseDialog();
     };
 
