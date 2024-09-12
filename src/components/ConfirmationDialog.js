@@ -7,6 +7,7 @@ import ProfilePictureUpload from './ProfilePictureUpload';
 
 const ConfirmationDialog = ({ open, onClose, onConfirm, title, message, context }) => {
 
+    const userId = localStorage.getItem('userId');
     const uploadRef = useRef(); // Crée une référence pour le composant ProfilePictureUpload
 
     const handleUploadClick = async () => {
@@ -24,7 +25,7 @@ const ConfirmationDialog = ({ open, onClose, onConfirm, title, message, context 
                 );
             case 'upload-profile-picture':
                 return (
-                     <ProfilePictureUpload ref={uploadRef} />
+                     <ProfilePictureUpload ref={uploadRef} userId={userId} />
                 );
             default:
                 return (

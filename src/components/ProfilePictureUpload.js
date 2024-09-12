@@ -22,12 +22,12 @@ const ProfilePictureUpload = forwardRef((props, ref) => {
             if (selectedImage) {
                 const formData = new FormData();
                 formData.append('profile_picture', selectedImage);
-
+                formData.append('userId', props.userId);
                 // Envoie l'image au serveur
                 await fetch(`${process.env.REACT_APP_API_URL}/upload-profile-picture`, {
                     method: 'POST',
                     body: formData,
-                });
+                });                
             }
         }
     }));
