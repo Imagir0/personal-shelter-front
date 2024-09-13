@@ -358,8 +358,13 @@ const Profile = () => {
                                 <span id="modifyAvatar" onClick={() => handleOpenDialog('upload-profile-picture')}>+</span>
                             }
                         >
-                            <Avatar id="avatarSize" {...stringAvatar(`${user.first_name} ${user.last_name}`)} />
+                            <Avatar
+                                id="avatarSize"
+                                src={user.profile_picture_url ? `${process.env.REACT_APP_API_URL}/uploads${user.profile_picture_url}` : null}
+                                {...(user.profile_picture_url ? {} : stringAvatar(`${user.first_name} ${user.last_name}`))}
+                            />
                         </Badge>
+
                         <Typography id="firstAndLastName" variant="h5" gutterBottom>
                             {user.first_name} {user.last_name}
                         </Typography>
